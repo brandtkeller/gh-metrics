@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -33,7 +33,7 @@ func getAllIssuesCount(baseURL string) (int, error) {
 		}
 		defer issuesResp.Body.Close()
 
-		issuesData, err := ioutil.ReadAll(issuesResp.Body)
+		issuesData, err := io.ReadAll(issuesResp.Body)
 		if err != nil {
 			return 0, err
 		}
@@ -69,7 +69,7 @@ func getGitHubMetrics(owner, repo string) (Metrics, error) {
 		return Metrics{}, err
 	}
 	defer repoResp.Body.Close()
-	repoData, err := ioutil.ReadAll(repoResp.Body)
+	repoData, err := io.ReadAll(repoResp.Body)
 	if err != nil {
 		return Metrics{}, err
 	}
@@ -86,7 +86,7 @@ func getGitHubMetrics(owner, repo string) (Metrics, error) {
 	}
 	defer releasesResp.Body.Close()
 
-	releasesData, err := ioutil.ReadAll(releasesResp.Body)
+	releasesData, err := io.ReadAll(releasesResp.Body)
 	if err != nil {
 		return Metrics{}, err
 	}
@@ -163,8 +163,8 @@ func getMetricsFilePath(repoName string, timestamp string) string {
 }
 
 func main() {
-	owner := flag.String("owner", "octocat", "The owner of the GitHub repository")
-	repo := flag.String("repo", "Hello-World", "The name of the GitHub repository")
+	owner := flag.String("owner", "zarf-dev", "The owner of the GitHub repository")
+	repo := flag.String("repo", "zarf", "The name of the GitHub repository")
 	previousFile := flag.String("previous", "", "Path to the previous metrics file")
 	flag.Parse()
 
@@ -181,7 +181,7 @@ func main() {
 		file, err := os.Open(*previousFile)
 		if err == nil {
 			defer file.Close()
-			data, _ := ioutil.ReadAll(file)
+			data, _ := io.ReadAll(file)
 			json.Unmarshal(data, &previous)
 		}
 	}
@@ -197,5 +197,5 @@ func main() {
 
 	// Save current metrics for future comparison
 	data, _ := json.Marshal(current)
-	ioutil.WriteFile(metricsFile, data, 0644)
+	os.WriteFile(metricsFile, data, 0644)
 }
